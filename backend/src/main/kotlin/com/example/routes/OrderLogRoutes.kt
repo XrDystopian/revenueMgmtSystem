@@ -19,7 +19,6 @@ import java.time.LocalDate
 
 fun Route.orderLogRoutes() {
 
-    // CREATE
     post("/orders") {
         val form = call.receive<OrderLogForm>()
         transaction {
@@ -36,7 +35,6 @@ fun Route.orderLogRoutes() {
         call.respond(HttpStatusCode.Created, "Order log created")
     }
 
-    // READ ALL
     get("/orders") {
         val orders = transaction {
             OrderLog.selectAll().map {
@@ -55,7 +53,6 @@ fun Route.orderLogRoutes() {
         call.respond(orders)
     }
 
-    // READ ONE
     get("/orders/{id}") {
         val id = call.parameters["id"]?.toIntOrNull()
         if (id == null) {
@@ -85,7 +82,6 @@ fun Route.orderLogRoutes() {
         }
     }
 
-    // UPDATE
     put("/orders/{id}") {
         val id = call.parameters["id"]?.toIntOrNull()
         if (id == null) {
@@ -114,7 +110,6 @@ fun Route.orderLogRoutes() {
         }
     }
 
-    // DELETE
     delete("/orders/{id}") {
         val id = call.parameters["id"]?.toIntOrNull()
         if (id == null) {

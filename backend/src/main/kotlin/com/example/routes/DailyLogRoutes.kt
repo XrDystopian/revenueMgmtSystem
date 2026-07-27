@@ -17,6 +17,9 @@ import org.jetbrains.exposed.v1.jdbc.update
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalTime
+import java.time.format.DateTimeFormatter
+
+private val timeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss")
 
 fun Route.dailyLogRoutes() {
 
@@ -46,8 +49,8 @@ fun Route.dailyLogRoutes() {
                     earnings = it[DailyLog.earnings]?.toString(),
                     winnerPayment = it[DailyLog.winnerPayment]?.toString(),
                     date = it[DailyLog.date]?.toString(),
-                    startTime = it[DailyLog.startTime]?.toString(),
-                    endTime = it[DailyLog.endTime]?.toString()
+                    startTime = it[DailyLog.startTime]?.format(timeFormatter),
+                    endTime = it[DailyLog.endTime]?.format(timeFormatter)
                 )
             }
         }
@@ -70,8 +73,8 @@ fun Route.dailyLogRoutes() {
                     earnings = it[DailyLog.earnings]?.toString(),
                     winnerPayment = it[DailyLog.winnerPayment]?.toString(),
                     date = it[DailyLog.date]?.toString(),
-                    startTime = it[DailyLog.startTime]?.toString(),
-                    endTime = it[DailyLog.endTime]?.toString()
+                    startTime = it[DailyLog.startTime]?.format(timeFormatter),
+                    endTime = it[DailyLog.endTime]?.format(timeFormatter)
                 )
             }.singleOrNull()
         }

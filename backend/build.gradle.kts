@@ -30,6 +30,7 @@ dependencies {
     implementation("org.postgresql:postgresql:42.7.11")
     implementation("com.zaxxer:HikariCP:5.1.0")
     implementation("io.github.cdimascio:dotenv-kotlin:6.4.1")
+    implementation(ktorLibs.server.statusPages)
 
     testImplementation(kotlin("test"))
     testImplementation(ktorLibs.server.testHost)
