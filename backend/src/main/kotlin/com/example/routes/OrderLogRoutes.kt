@@ -37,7 +37,7 @@ fun Route.orderLogRoutes() {
 
     get("/orders") {
         val orders = transaction {
-            OrderLog.selectAll().map {
+            OrderLog.selectAll().orderBy(OrderLog.orderId to SortOrder.ASC).map {
                 OrderLogResponse(
                     orderId = it[OrderLog.orderId],
                     stationId = it[OrderLog.stationId],

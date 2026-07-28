@@ -41,7 +41,7 @@ fun Route.dailyLogRoutes() {
 
     get("/daily-logs") {
         val logs = transaction {
-            DailyLog.selectAll().map {
+            DailyLog.selectAll().orderBy(DailyLog.logId to SortOrder.ASC).map {
                 DailyLogResponse(
                     logId = it[DailyLog.logId],
                     ussdId = it[DailyLog.ussdId],

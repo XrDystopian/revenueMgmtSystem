@@ -29,7 +29,7 @@ fun Route.ussdRoutes() {
 
     get("/ussd") {
         val codes = transaction {
-            Ussd.selectAll().map {
+            Ussd.selectAll().orderBy(Ussd.ussdId to SortOrder.ASC).map {
                 UssdResponse(
                     ussdId = it[Ussd.ussdId],
                     ussdCode = it[Ussd.ussdCode]

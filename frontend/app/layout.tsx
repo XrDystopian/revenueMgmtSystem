@@ -1,12 +1,16 @@
 import type { Metadata } from "next";
+import '@mantine/core/styles.css';
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { ColorSchemeScript, MantineProvider } from '@mantine/core';
+import { theme } from '../theme';
+import '@mantine/core/styles.css';
+import '@mantine/dates/styles.css';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
 });
-
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
@@ -27,7 +31,14 @@ export default function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <head>
+        <ColorSchemeScript defaultColorScheme="light" />
+      </head>
+      <body className="min-h-full flex flex-col">
+        <MantineProvider theme={theme} defaultColorScheme="light" forceColorScheme="light">
+          {children}
+        </MantineProvider>
+      </body>
     </html>
   );
 }

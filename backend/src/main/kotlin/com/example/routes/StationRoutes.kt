@@ -29,7 +29,7 @@ fun Route.stationRoutes() {
 
     get("/stations") {
         val stations = transaction {
-            Stations.selectAll().map {
+            Stations.selectAll().orderBy(Stations.stationId to SortOrder.ASC).map {
                 StationResponse(
                     stationId = it[Stations.stationId],
                     stationName = it[Stations.stationName]

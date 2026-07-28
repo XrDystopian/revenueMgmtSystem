@@ -33,7 +33,7 @@ fun Route.presenterExpenseRoutes() {
 
     get("/presenter-expenses") {
         val expenses = transaction {
-            PresenterExpense.selectAll().map {
+            PresenterExpense.selectAll().orderBy(PresenterExpense.expenseId to SortOrder.ASC).map {
                 PresenterExpenseResponse(
                     expenseId = it[PresenterExpense.expenseId],
                     presenterId = it[PresenterExpense.presenterId],

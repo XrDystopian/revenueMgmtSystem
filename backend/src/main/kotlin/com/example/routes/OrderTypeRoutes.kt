@@ -29,7 +29,7 @@ fun Route.orderTypeRoutes() {
 
     get("/order-types") {
         val types = transaction {
-            OrderType.selectAll().map {
+            OrderType.selectAll().orderBy(OrderType.orderTypeId to SortOrder.ASC).map {
                 OrderTypeResponse(
                     orderTypeId = it[OrderType.orderTypeId],
                     orderType = it[OrderType.orderType]
