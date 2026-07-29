@@ -1,5 +1,12 @@
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
+async function handleResponse(response: Response, fallbackMessage: string): Promise<void> {
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(errorText || fallbackMessage);
+  }
+}
+
 // ---------- Stations ----------
 export type Station = {
   stationId: number;
@@ -12,25 +19,28 @@ export async function getStations(): Promise<Station[]> {
 }
 
 export async function createStation(stationName: string): Promise<void> {
-  await fetch(`${BASE_URL}/stations`, {
+  const response = await fetch(`${BASE_URL}/stations`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ stationName }),
   });
+  await handleResponse(response, "Failed to create station");
 }
 
 export async function updateStation(id: number, stationName: string): Promise<void> {
-  await fetch(`${BASE_URL}/stations/${id}`, {
+  const response = await fetch(`${BASE_URL}/stations/${id}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ stationName }),
   });
+  await handleResponse(response, "Failed to update station");
 }
 
 export async function deleteStation(id: number): Promise<void> {
-  await fetch(`${BASE_URL}/stations/${id}`, {
+  const response = await fetch(`${BASE_URL}/stations/${id}`, {
     method: "DELETE",
   });
+  await handleResponse(response, "Failed to delete station");
 }
 
 // ---------- Order Types ----------
@@ -45,25 +55,28 @@ export async function getOrderType(): Promise<OrderType[]> {
 }
 
 export async function createOrderType(orderType: string): Promise<void> {
-  await fetch(`${BASE_URL}/order-types`, {
+  const response = await fetch(`${BASE_URL}/order-types`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ orderType }),
   });
+  await handleResponse(response, "Failed to create order type");
 }
 
 export async function updateOrderType(id: number, orderType: string): Promise<void> {
-  await fetch(`${BASE_URL}/order-types/${id}`, {
+  const response = await fetch(`${BASE_URL}/order-types/${id}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ orderType }),
   });
+  await handleResponse(response, "Failed to update order type");
 }
 
 export async function deleteOrderType(id: number): Promise<void> {
-  await fetch(`${BASE_URL}/order-types/${id}`, {
+  const response = await fetch(`${BASE_URL}/order-types/${id}`, {
     method: "DELETE",
   });
+  await handleResponse(response, "Failed to delete order type");
 }
 
 // ---------- USSD ----------
@@ -78,25 +91,28 @@ export async function getUssd(): Promise<Ussd[]> {
 }
 
 export async function createUssd(ussdCode: string): Promise<void> {
-  await fetch(`${BASE_URL}/ussd`, {
+  const response = await fetch(`${BASE_URL}/ussd`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ ussdCode }),
   });
+  await handleResponse(response, "Failed to create USSD code");
 }
 
 export async function updateUssd(id: number, ussdCode: string): Promise<void> {
-  await fetch(`${BASE_URL}/ussd/${id}`, {
+  const response = await fetch(`${BASE_URL}/ussd/${id}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ ussdCode }),
   });
+  await handleResponse(response, "Failed to update USSD code");
 }
 
 export async function deleteUssd(id: number): Promise<void> {
-  await fetch(`${BASE_URL}/ussd/${id}`, {
+  const response = await fetch(`${BASE_URL}/ussd/${id}`, {
     method: "DELETE",
   });
+  await handleResponse(response, "Failed to delete USSD code");
 }
 
 // ---------- Presenters ----------
@@ -112,11 +128,12 @@ export async function getPresenters(): Promise<Presenter[]> {
 }
 
 export async function createPresenter(presenterName: string, stationId: number | null): Promise<void> {
-  await fetch(`${BASE_URL}/presenters`, {
+  const response = await fetch(`${BASE_URL}/presenters`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ presenterName, stationId }),
   });
+  await handleResponse(response, "Failed to create presenter");
 }
 
 export async function updatePresenter(
@@ -124,17 +141,19 @@ export async function updatePresenter(
   presenterName: string,
   stationId: number | null
 ): Promise<void> {
-  await fetch(`${BASE_URL}/presenters/${id}`, {
+  const response = await fetch(`${BASE_URL}/presenters/${id}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ presenterName, stationId }),
   });
+  await handleResponse(response, "Failed to update presenter");
 }
 
 export async function deletePresenter(id: number): Promise<void> {
-  await fetch(`${BASE_URL}/presenters/${id}`, {
+  const response = await fetch(`${BASE_URL}/presenters/${id}`, {
     method: "DELETE",
   });
+  await handleResponse(response, "Failed to delete presenter");
 }
 
 // ---------- Order Log ----------
@@ -165,25 +184,28 @@ export async function getOrderLogs(): Promise<OrderLog[]> {
 }
 
 export async function createOrderLog(form: OrderLogForm): Promise<void> {
-  await fetch(`${BASE_URL}/orders`, {
+  const response = await fetch(`${BASE_URL}/orders`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(form),
   });
+  await handleResponse(response, "Failed to create order");
 }
 
 export async function updateOrderLog(id: number, form: OrderLogForm): Promise<void> {
-  await fetch(`${BASE_URL}/orders/${id}`, {
+  const response = await fetch(`${BASE_URL}/orders/${id}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(form),
   });
+  await handleResponse(response, "Failed to update order");
 }
 
 export async function deleteOrderLog(id: number): Promise<void> {
-  await fetch(`${BASE_URL}/orders/${id}`, {
+  const response = await fetch(`${BASE_URL}/orders/${id}`, {
     method: "DELETE",
   });
+  await handleResponse(response, "Failed to delete order");
 }
 
 // ---------- Presenter Expense ----------
@@ -206,25 +228,28 @@ export async function getPresenterExpenses(): Promise<PresenterExpense[]> {
 }
 
 export async function createPresenterExpense(form: PresenterExpenseForm): Promise<void> {
-  await fetch(`${BASE_URL}/presenter-expenses`, {
+  const response = await fetch(`${BASE_URL}/presenter-expenses`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(form),
   });
+  await handleResponse(response, "Failed to create presenter expense");
 }
 
 export async function updatePresenterExpense(id: number, form: PresenterExpenseForm): Promise<void> {
-  await fetch(`${BASE_URL}/presenter-expenses/${id}`, {
+  const response = await fetch(`${BASE_URL}/presenter-expenses/${id}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(form),
   });
+  await handleResponse(response, "Failed to update presenter expense");
 }
 
 export async function deletePresenterExpense(id: number): Promise<void> {
-  await fetch(`${BASE_URL}/presenter-expenses/${id}`, {
+  const response = await fetch(`${BASE_URL}/presenter-expenses/${id}`, {
     method: "DELETE",
   });
+  await handleResponse(response, "Failed to delete presenter expense");
 }
 
 // ---------- Daily Log ----------
@@ -255,23 +280,26 @@ export async function getDailyLogs(): Promise<DailyLog[]> {
 }
 
 export async function createDailyLog(form: DailyLogForm): Promise<void> {
-  await fetch(`${BASE_URL}/daily-logs`, {
+  const response = await fetch(`${BASE_URL}/daily-logs`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(form),
   });
+  await handleResponse(response, "Failed to create daily log");
 }
 
 export async function updateDailyLog(id: number, form: DailyLogForm): Promise<void> {
-  await fetch(`${BASE_URL}/daily-logs/${id}`, {
+  const response = await fetch(`${BASE_URL}/daily-logs/${id}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(form),
   });
+  await handleResponse(response, "Failed to update daily log");
 }
 
 export async function deleteDailyLog(id: number): Promise<void> {
-  await fetch(`${BASE_URL}/daily-logs/${id}`, {
+  const response = await fetch(`${BASE_URL}/daily-logs/${id}`, {
     method: "DELETE",
   });
+  await handleResponse(response, "Failed to delete daily log");
 }

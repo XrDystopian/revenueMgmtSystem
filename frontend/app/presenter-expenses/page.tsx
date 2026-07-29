@@ -12,7 +12,6 @@ import {
   Group,
   Paper,
   ActionIcon,
-  Box,
 } from "@mantine/core";
 import { DateInput } from "@mantine/dates";
 import { IconPencil, IconTrash, IconPlus } from "@tabler/icons-react";
@@ -26,6 +25,7 @@ import {
   PresenterExpenseForm,
   Presenter,
 } from "@/lib/api";
+import { notifySuccess, notifyError } from "@/lib/notify";
 
 const emptyForm: PresenterExpenseForm = {
   presenterId: null,
@@ -83,19 +83,30 @@ export default function PresenterExpensesPage() {
   }
 
   async function handleSubmit() {
-    if (editingExpense) {
-      await updatePresenterExpense(editingExpense.expenseId, form);
-    } else {
-      await createPresenterExpense(form);
-    }
+    try {
+      if (editingExpense) {
+        await updatePresenterExpense(editingExpense.expenseId, form);
+        notifySuccess("Expense updated successfully");
+      } else {
+        await createPresenterExpense(form);
+        notifySuccess("Expense created successfully");
+      }
 
-    setModalOpen(false);
-    await refreshExpenses();
+      setModalOpen(false);
+      await refreshExpenses();
+    } catch (error) {
+      notifyError(error instanceof Error ? error.message : "Something went wrong");
+    }
   }
 
   async function handleDelete(id: number) {
-    await deletePresenterExpense(id);
-    await refreshExpenses();
+    try {
+      await deletePresenterExpense(id);
+      notifySuccess("Expense deleted successfully");
+      await refreshExpenses();
+    } catch (error) {
+      notifyError(error instanceof Error ? error.message : "Something went wrong");
+    }
   }
 
   function getPresenterName(id: number | null): string {
@@ -109,110 +120,108 @@ export default function PresenterExpensesPage() {
   }));
 
   return (
-    <Box bg="gray.0" mih="100vh" py={60}>
-      <Container size="md">
-        <Group justify="space-between" mb="xl">
-          <Title order={2} fw={700}>
-            Presenter Expenses
-          </Title>
-          <Button leftSection={<IconPlus size={16} />} onClick={openAddModal}>
-            Add Expense
-          </Button>
-        </Group>
+    <Container size="md" py={60}>
+      <Group justify="space-between" mb="xl">
+        <Title order={2} fw={700}>
+          Presenter Expenses
+        </Title>
+        <Button leftSection={<IconPlus size={16} />} onClick={openAddModal}>
+          Add Expense
+        </Button>
+      </Group>
 
-        <Paper withBorder shadow="sm" radius="md" p="md">
-          <Table verticalSpacing="sm" highlightOnHover>
-            <Table.Thead>
-              <Table.Tr>
-                <Table.Th w={60}>#</Table.Th>
-                <Table.Th>Presenter</Table.Th>
-                <Table.Th>Amount</Table.Th>
-                <Table.Th>Payment Date</Table.Th>
-                <Table.Th w={120} ta="right">
-                  Actions
-                </Table.Th>
+      <Paper withBorder shadow="sm" radius="md" p="md">
+        <Table verticalSpacing="sm" highlightOnHover>
+          <Table.Thead>
+            <Table.Tr>
+              <Table.Th w={60}>#</Table.Th>
+              <Table.Th>Presenter</Table.Th>
+              <Table.Th>Amount</Table.Th>
+              <Table.Th>Payment Date</Table.Th>
+              <Table.Th w={120} ta="right">
+                Actions
+              </Table.Th>
+            </Table.Tr>
+          </Table.Thead>
+          <Table.Tbody>
+            {expenses.map((expense, index) => (
+              <Table.Tr key={expense.expenseId}>
+                <Table.Td c="dimmed">{index + 1}</Table.Td>
+                <Table.Td>{getPresenterName(expense.presenterId)}</Table.Td>
+                <Table.Td>{expense.amount}</Table.Td>
+                <Table.Td>{expense.paymentDate}</Table.Td>
+                <Table.Td>
+                  <Group gap="xs" justify="flex-end">
+                    <ActionIcon
+                      variant="light"
+                      color="blue"
+                      onClick={() => openEditModal(expense)}
+                      aria-label="Edit expense"
+                    >
+                      <IconPencil size={16} />
+                    </ActionIcon>
+                    <ActionIcon
+                      variant="light"
+                      color="red"
+                      onClick={() => handleDelete(expense.expenseId)}
+                      aria-label="Delete expense"
+                    >
+                      <IconTrash size={16} />
+                    </ActionIcon>
+                  </Group>
+                </Table.Td>
               </Table.Tr>
-            </Table.Thead>
-            <Table.Tbody>
-              {expenses.map((expense, index) => (
-                <Table.Tr key={expense.expenseId}>
-                  <Table.Td c="dimmed">{index + 1}</Table.Td>
-                  <Table.Td>{getPresenterName(expense.presenterId)}</Table.Td>
-                  <Table.Td>{expense.amount}</Table.Td>
-                  <Table.Td>{expense.paymentDate}</Table.Td>
-                  <Table.Td>
-                    <Group gap="xs" justify="flex-end">
-                      <ActionIcon
-                        variant="light"
-                        color="blue"
-                        onClick={() => openEditModal(expense)}
-                        aria-label="Edit expense"
-                      >
-                        <IconPencil size={16} />
-                      </ActionIcon>
-                      <ActionIcon
-                        variant="light"
-                        color="red"
-                        onClick={() => handleDelete(expense.expenseId)}
-                        aria-label="Delete expense"
-                      >
-                        <IconTrash size={16} />
-                      </ActionIcon>
-                    </Group>
-                  </Table.Td>
-                </Table.Tr>
-              ))}
-            </Table.Tbody>
-          </Table>
+            ))}
+          </Table.Tbody>
+        </Table>
 
-          {expenses.length === 0 && (
-            <Box py="xl" ta="center" c="dimmed">
-              No expenses yet. Click &quot;Add Expense&quot; to create one.
-            </Box>
-          )}
-        </Paper>
+        {expenses.length === 0 && (
+          <Container py="xl" ta="center" c="dimmed">
+            No expenses yet. Click &quot;Add Expense&quot; to create one.
+          </Container>
+        )}
+      </Paper>
 
-        <Modal
-          opened={modalOpen}
-          onClose={() => setModalOpen(false)}
-          title={editingExpense ? "Edit Expense" : "Add Expense"}
-          centered
-        >
-          <Select
-            label="Presenter"
-            placeholder="Select a presenter"
-            data={presenterOptions}
-            value={form.presenterId ? String(form.presenterId) : null}
-            onChange={(value) =>
-              setForm({ ...form, presenterId: value ? Number(value) : null })
-            }
-            clearable
-            mb="md"
-          />
-          <NumberInput
-            label="Amount"
-            placeholder="e.g. 25000"
-            value={form.amount ? Number(form.amount) : ""}
-            onChange={(value) => setForm({ ...form, amount: value ? String(value) : "" })}
-            thousandSeparator=","
-            decimalScale={2}
-            fixedDecimalScale
-            min={0}
-            mb="md"
-          />
-          <DateInput
-            label="Payment Date"
-            placeholder="Select payment date"
-            value={form.paymentDate || null}
-            onChange={(date) => setForm({ ...form, paymentDate: date ?? "" })}
-            valueFormat="YYYY-MM-DD"
-            mb="md"
-          />
-          <Button onClick={handleSubmit} fullWidth>
-            {editingExpense ? "Save Changes" : "Add Expense"}
-          </Button>
-        </Modal>
-      </Container>
-    </Box>
+      <Modal
+        opened={modalOpen}
+        onClose={() => setModalOpen(false)}
+        title={editingExpense ? "Edit Expense" : "Add Expense"}
+        centered
+      >
+        <Select
+          label="Presenter"
+          placeholder="Select a presenter"
+          data={presenterOptions}
+          value={form.presenterId ? String(form.presenterId) : null}
+          onChange={(value) =>
+            setForm({ ...form, presenterId: value ? Number(value) : null })
+          }
+          clearable
+          mb="md"
+        />
+        <NumberInput
+          label="Amount"
+          placeholder="e.g. 25000"
+          value={form.amount ? Number(form.amount) : ""}
+          onChange={(value) => setForm({ ...form, amount: value ? String(value) : "" })}
+          thousandSeparator=","
+          decimalScale={2}
+          fixedDecimalScale
+          min={0}
+          mb="md"
+        />
+        <DateInput
+          label="Payment Date"
+          placeholder="Select payment date"
+          value={form.paymentDate || null}
+          onChange={(date) => setForm({ ...form, paymentDate: date ?? "" })}
+          valueFormat="YYYY-MM-DD"
+          mb="md"
+        />
+        <Button onClick={handleSubmit} fullWidth>
+          {editingExpense ? "Save Changes" : "Add Expense"}
+        </Button>
+      </Modal>
+    </Container>
   );
 }
