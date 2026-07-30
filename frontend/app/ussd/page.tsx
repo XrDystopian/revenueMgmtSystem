@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import {
   TextInput,
+  Select,
   Button,
   Table,
   Container,
@@ -13,26 +14,37 @@ import {
   ActionIcon,
 } from "@mantine/core";
 import { IconPencil, IconTrash, IconPlus } from "@tabler/icons-react";
-import { getUssd, createUssd, updateUssd, deleteUssd, Ussd } from "@/lib/api";
+import {
+  getUssd,
+  createUssd,
+  updateUssd,
+  deleteUssd,
+  getUssdTypes,
+  Ussd,
+  UssdType,
+} from "@/lib/api";
 import { notifySuccess, notifyError } from "@/lib/notify";
 
 export default function UssdPage() {
   const [ussdCodes, setUssdCodes] = useState<Ussd[]>([]);
+  const [ussdTypes, setUssdTypes] = useState<UssdType[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingUssd, setEditingUssd] = useState<Ussd | null>(null);
   const [ussdCode, setUssdCode] = useState("");
+  const [ussdTypeId, setUssdTypeId] = useState<string | null>(null);
 
   useEffect(() => {
     let isMounted = true;
 
-    async function loadUssdCodes() {
-      const data = await getUssd();
+    async function loadData() {
+      const [ussdData, ussdTypeData] = await Promise.all([getUssd(), getUssdTypes()]);
       if (isMounted) {
-        setUssdCodes(data);
+        setUssdCodes(ussdData);
+        setUssdTypes(ussdTypeData);
       }
     }
 
-    loadUssdCodes();
+    loadData();
 
     return () => {
       isMounted = false;
@@ -47,24 +59,28 @@ export default function UssdPage() {
   function openAddModal() {
     setEditingUssd(null);
     setUssdCode("");
+    setUssdTypeId(null);
     setModalOpen(true);
   }
 
   function openEditModal(ussd: Ussd) {
     setEditingUssd(ussd);
     setUssdCode(ussd.ussdCode ?? "");
+    setUssdTypeId(ussd.ussdTypeId ? String(ussd.ussdTypeId) : null);
     setModalOpen(true);
   }
 
   async function handleSubmit() {
     if (ussdCode.trim() === "") return;
 
+    const parsedUssdTypeId = ussdTypeId ? Number(ussdTypeId) : null;
+
     try {
       if (editingUssd) {
-        await updateUssd(editingUssd.ussdId, ussdCode);
+        await updateUssd(editingUssd.ussdId, ussdCode, parsedUssdTypeId);
         notifySuccess("USSD code updated successfully");
       } else {
-        await createUssd(ussdCode);
+        await createUssd(ussdCode, parsedUssdTypeId);
         notifySuccess("USSD code created successfully");
       }
 
@@ -85,6 +101,16 @@ export default function UssdPage() {
     }
   }
 
+  function getUssdTypeName(id: number | null): string {
+    if (id === null) return "—";
+    return ussdTypes.find((t) => t.ussdTypeId === id)?.ussdType ?? "—";
+  }
+
+  const ussdTypeOptions = ussdTypes.map((t) => ({
+    value: String(t.ussdTypeId),
+    label: t.ussdType ?? `Type ${t.ussdTypeId}`,
+  }));
+
   return (
     <Container size="md" py={60}>
       <Group justify="space-between" mb="xl">
@@ -102,6 +128,7 @@ export default function UssdPage() {
             <Table.Tr>
               <Table.Th w={60}>#</Table.Th>
               <Table.Th>USSD Code</Table.Th>
+              <Table.Th>USSD Type</Table.Th>
               <Table.Th w={120} ta="right">
                 Actions
               </Table.Th>
@@ -112,6 +139,7 @@ export default function UssdPage() {
               <Table.Tr key={ussd.ussdId}>
                 <Table.Td c="dimmed">{index + 1}</Table.Td>
                 <Table.Td>{ussd.ussdCode}</Table.Td>
+                <Table.Td>{getUssdTypeName(ussd.ussdTypeId)}</Table.Td>
                 <Table.Td>
                   <Group gap="xs" justify="flex-end">
                     <ActionIcon
@@ -157,6 +185,15 @@ export default function UssdPage() {
           onChange={(event) => setUssdCode(event.currentTarget.value)}
           mb="md"
           data-autofocus
+        />
+        <Select
+          label="USSD Type"
+          placeholder="Select a USSD type"
+          data={ussdTypeOptions}
+          value={ussdTypeId}
+          onChange={setUssdTypeId}
+          clearable
+          mb="md"
         />
         <Button onClick={handleSubmit} fullWidth>
           {editingUssd ? "Save Changes" : "Add USSD Code"}

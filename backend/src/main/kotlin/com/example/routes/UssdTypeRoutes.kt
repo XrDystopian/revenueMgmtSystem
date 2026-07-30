@@ -1,8 +1,8 @@
 package com.example.routes
 
-import com.example.db.OrderType
-import com.example.models.OrderTypeForm
-import com.example.models.OrderTypeResponse
+import com.example.db.UssdType
+import com.example.models.UssdTypeForm
+import com.example.models.UssdTypeResponse
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.request.*
@@ -15,31 +15,31 @@ import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.jdbc.update
 
-fun Route.orderTypeRoutes() {
+fun Route.ussdTypeRoutes() {
 
-    post("/order-types") {
-        val form = call.receive<OrderTypeForm>()
+    post("/ussd-types") {
+        val form = call.receive<UssdTypeForm>()
         transaction {
-            OrderType.insert {
-                it[orderType] = form.orderType
+            UssdType.insert {
+                it[ussdType] = form.ussdType
             }
         }
-        call.respond(HttpStatusCode.Created, "Order type created")
+        call.respond(HttpStatusCode.Created, "USSD type created")
     }
 
-    get("/order-types") {
+    get("/ussd-types") {
         val types = transaction {
-            OrderType.selectAll().orderBy(OrderType.orderTypeId to SortOrder.ASC).map {
-                OrderTypeResponse(
-                    orderTypeId = it[OrderType.orderTypeId],
-                    orderType = it[OrderType.orderType]
+            UssdType.selectAll().orderBy(UssdType.ussdTypeId to SortOrder.ASC).map {
+                UssdTypeResponse(
+                    ussdTypeId = it[UssdType.ussdTypeId],
+                    ussdType = it[UssdType.ussdType]
                 )
             }
         }
         call.respond(types)
     }
 
-    get("/order-types/{id}") {
+    get("/ussd-types/{id}") {
         val id = call.parameters["id"]?.toIntOrNull()
         if (id == null) {
             call.respond(HttpStatusCode.BadRequest, "Invalid id")
@@ -47,44 +47,44 @@ fun Route.orderTypeRoutes() {
         }
 
         val type = transaction {
-            OrderType.selectAll().where { OrderType.orderTypeId eq id }.map {
-                OrderTypeResponse(
-                    orderTypeId = it[OrderType.orderTypeId],
-                    orderType = it[OrderType.orderType]
+            UssdType.selectAll().where { UssdType.ussdTypeId eq id }.map {
+                UssdTypeResponse(
+                    ussdTypeId = it[UssdType.ussdTypeId],
+                    ussdType = it[UssdType.ussdType]
                 )
             }.singleOrNull()
         }
 
         if (type == null) {
-            call.respond(HttpStatusCode.NotFound, "Order type not found")
+            call.respond(HttpStatusCode.NotFound, "USSD type not found")
         } else {
             call.respond(type)
         }
     }
 
-    put("/order-types/{id}") {
+    put("/ussd-types/{id}") {
         val id = call.parameters["id"]?.toIntOrNull()
         if (id == null) {
             call.respond(HttpStatusCode.BadRequest, "Invalid id")
             return@put
         }
 
-        val form = call.receive<OrderTypeForm>()
+        val form = call.receive<UssdTypeForm>()
 
         val updatedRows = transaction {
-            OrderType.update({ OrderType.orderTypeId eq id }) {
-                it[orderType] = form.orderType
+            UssdType.update({ UssdType.ussdTypeId eq id }) {
+                it[ussdType] = form.ussdType
             }
         }
 
         if (updatedRows == 0) {
-            call.respond(HttpStatusCode.NotFound, "Order type not found")
+            call.respond(HttpStatusCode.NotFound, "USSD type not found")
         } else {
-            call.respond(HttpStatusCode.OK, "Order type updated")
+            call.respond(HttpStatusCode.OK, "USSD type updated")
         }
     }
 
-    delete("/order-types/{id}") {
+    delete("/ussd-types/{id}") {
         val id = call.parameters["id"]?.toIntOrNull()
         if (id == null) {
             call.respond(HttpStatusCode.BadRequest, "Invalid id")
@@ -92,13 +92,13 @@ fun Route.orderTypeRoutes() {
         }
 
         val deletedRows = transaction {
-            OrderType.deleteWhere { OrderType.orderTypeId eq id }
+            UssdType.deleteWhere { UssdType.ussdTypeId eq id }
         }
 
         if (deletedRows == 0) {
-            call.respond(HttpStatusCode.NotFound, "Order type not found")
+            call.respond(HttpStatusCode.NotFound, "USSD type not found")
         } else {
-            call.respond(HttpStatusCode.OK, "Order type deleted")
+            call.respond(HttpStatusCode.OK, "USSD type deleted")
         }
     }
 }

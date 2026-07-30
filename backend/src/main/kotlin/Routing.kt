@@ -15,7 +15,7 @@ fun Application.configureRouting() {
         }
         orderLogRoutes()
         stationRoutes()
-        orderTypeRoutes()
+        ussdTypeRoutes()
         ussdRoutes()
         presenterRoutes()
         presenterExpenseRoutes()

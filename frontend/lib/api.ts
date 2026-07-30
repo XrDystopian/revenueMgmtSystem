@@ -43,46 +43,47 @@ export async function deleteStation(id: number): Promise<void> {
   await handleResponse(response, "Failed to delete station");
 }
 
-// ---------- Order Types ----------
-export type OrderType = {
-  orderTypeId: number;
-  orderType: string | null;
+// ---------- USSD Types ----------
+export type UssdType = {
+  ussdTypeId: number;
+  ussdType: string | null;
 };
 
-export async function getOrderType(): Promise<OrderType[]> {
-  const response = await fetch(`${BASE_URL}/order-types`);
+export async function getUssdTypes(): Promise<UssdType[]> {
+  const response = await fetch(`${BASE_URL}/ussd-types`);
   return response.json();
 }
 
-export async function createOrderType(orderType: string): Promise<void> {
-  const response = await fetch(`${BASE_URL}/order-types`, {
+export async function createUssdType(ussdType: string): Promise<void> {
+  const response = await fetch(`${BASE_URL}/ussd-types`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ orderType }),
+    body: JSON.stringify({ ussdType }),
   });
-  await handleResponse(response, "Failed to create order type");
+  await handleResponse(response, "Failed to create USSD type");
 }
 
-export async function updateOrderType(id: number, orderType: string): Promise<void> {
-  const response = await fetch(`${BASE_URL}/order-types/${id}`, {
+export async function updateUssdType(id: number, ussdType: string): Promise<void> {
+  const response = await fetch(`${BASE_URL}/ussd-types/${id}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ orderType }),
+    body: JSON.stringify({ ussdType }),
   });
-  await handleResponse(response, "Failed to update order type");
+  await handleResponse(response, "Failed to update USSD type");
 }
 
-export async function deleteOrderType(id: number): Promise<void> {
-  const response = await fetch(`${BASE_URL}/order-types/${id}`, {
+export async function deleteUssdType(id: number): Promise<void> {
+  const response = await fetch(`${BASE_URL}/ussd-types/${id}`, {
     method: "DELETE",
   });
-  await handleResponse(response, "Failed to delete order type");
+  await handleResponse(response, "Failed to delete USSD type");
 }
 
 // ---------- USSD ----------
 export type Ussd = {
   ussdId: number;
   ussdCode: string | null;
+  ussdTypeId: number | null;
 };
 
 export async function getUssd(): Promise<Ussd[]> {
@@ -90,20 +91,20 @@ export async function getUssd(): Promise<Ussd[]> {
   return response.json();
 }
 
-export async function createUssd(ussdCode: string): Promise<void> {
+export async function createUssd(ussdCode: string, ussdTypeId: number | null): Promise<void> {
   const response = await fetch(`${BASE_URL}/ussd`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ ussdCode }),
+    body: JSON.stringify({ ussdCode, ussdTypeId }),
   });
   await handleResponse(response, "Failed to create USSD code");
 }
 
-export async function updateUssd(id: number, ussdCode: string): Promise<void> {
+export async function updateUssd(id: number, ussdCode: string, ussdTypeId: number | null): Promise<void> {
   const response = await fetch(`${BASE_URL}/ussd/${id}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ ussdCode }),
+    body: JSON.stringify({ ussdCode, ussdTypeId }),
   });
   await handleResponse(response, "Failed to update USSD code");
 }
@@ -160,7 +161,6 @@ export async function deletePresenter(id: number): Promise<void> {
 export type OrderLog = {
   orderId: number;
   stationId: number | null;
-  orderTypeId: number | null;
   amount: string | null;
   duration: number | null;
   startDate: string | null;
@@ -170,7 +170,6 @@ export type OrderLog = {
 
 export type OrderLogForm = {
   stationId: number;
-  orderTypeId: number;
   amount: string;
   duration: number;
   startDate: string;
@@ -179,12 +178,12 @@ export type OrderLogForm = {
 };
 
 export async function getOrderLogs(): Promise<OrderLog[]> {
-  const response = await fetch(`${BASE_URL}/orders`);
+  const response = await fetch(`${BASE_URL}/order-logs`);
   return response.json();
 }
 
 export async function createOrderLog(form: OrderLogForm): Promise<void> {
-  const response = await fetch(`${BASE_URL}/orders`, {
+  const response = await fetch(`${BASE_URL}/order-logs`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(form),
@@ -193,7 +192,7 @@ export async function createOrderLog(form: OrderLogForm): Promise<void> {
 }
 
 export async function updateOrderLog(id: number, form: OrderLogForm): Promise<void> {
-  const response = await fetch(`${BASE_URL}/orders/${id}`, {
+  const response = await fetch(`${BASE_URL}/order-logs/${id}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(form),
@@ -202,7 +201,7 @@ export async function updateOrderLog(id: number, form: OrderLogForm): Promise<vo
 }
 
 export async function deleteOrderLog(id: number): Promise<void> {
-  const response = await fetch(`${BASE_URL}/orders/${id}`, {
+  const response = await fetch(`${BASE_URL}/order-logs/${id}`, {
     method: "DELETE",
   });
   await handleResponse(response, "Failed to delete order");

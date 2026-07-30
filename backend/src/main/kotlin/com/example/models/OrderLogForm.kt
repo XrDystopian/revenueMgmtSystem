@@ -5,7 +5,6 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class OrderLogForm(
     val stationId: Int,
-    val orderTypeId: Int,
     val amount: String,
     val duration: Int,
     val startDate: String,
@@ -17,7 +16,6 @@ data class OrderLogForm(
 data class OrderLogResponse(
     val orderId: Int,
     val stationId: Int?,
-    val orderTypeId: Int?,
     val amount: String?,
     val duration: Int?,
     val startDate: String?,

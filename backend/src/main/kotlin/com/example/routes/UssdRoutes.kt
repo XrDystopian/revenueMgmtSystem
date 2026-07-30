@@ -22,6 +22,7 @@ fun Route.ussdRoutes() {
         transaction {
             Ussd.insert {
                 it[ussdCode] = form.ussdCode
+                it[ussdTypeId] = form.ussdTypeId
             }
         }
         call.respond(HttpStatusCode.Created, "USSD code created")
@@ -32,7 +33,8 @@ fun Route.ussdRoutes() {
             Ussd.selectAll().orderBy(Ussd.ussdId to SortOrder.ASC).map {
                 UssdResponse(
                     ussdId = it[Ussd.ussdId],
-                    ussdCode = it[Ussd.ussdCode]
+                    ussdCode = it[Ussd.ussdCode],
+                    ussdTypeId = it[Ussd.ussdTypeId]
                 )
             }
         }
@@ -50,7 +52,8 @@ fun Route.ussdRoutes() {
             Ussd.selectAll().where { Ussd.ussdId eq id }.map {
                 UssdResponse(
                     ussdId = it[Ussd.ussdId],
-                    ussdCode = it[Ussd.ussdCode]
+                    ussdCode = it[Ussd.ussdCode],
+                    ussdTypeId = it[Ussd.ussdTypeId]
                 )
             }.singleOrNull()
         }
@@ -74,6 +77,7 @@ fun Route.ussdRoutes() {
         val updatedRows = transaction {
             Ussd.update({ Ussd.ussdId eq id }) {
                 it[ussdCode] = form.ussdCode
+                it[ussdTypeId] = form.ussdTypeId
             }
         }
 

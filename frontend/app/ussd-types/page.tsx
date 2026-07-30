@@ -14,68 +14,68 @@ import {
 } from "@mantine/core";
 import { IconPencil, IconTrash, IconPlus } from "@tabler/icons-react";
 import {
-  getOrderType,
-  createOrderType,
-  updateOrderType,
-  deleteOrderType,
-  OrderType,
+  getUssdTypes,
+  createUssdType,
+  updateUssdType,
+  deleteUssdType,
+  UssdType,
 } from "@/lib/api";
 import { notifySuccess, notifyError } from "@/lib/notify";
 
-export default function OrderTypesPage() {
-  const [orderTypes, setOrderTypes] = useState<OrderType[]>([]);
+export default function UssdTypesPage() {
+  const [ussdTypes, setUssdTypes] = useState<UssdType[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
-  const [editingOrderType, setEditingOrderType] = useState<OrderType | null>(null);
-  const [orderTypeName, setOrderTypeName] = useState("");
+  const [editingUssdType, setEditingUssdType] = useState<UssdType | null>(null);
+  const [ussdTypeName, setUssdTypeName] = useState("");
 
   useEffect(() => {
     let isMounted = true;
 
-    async function loadOrderTypes() {
-      const data = await getOrderType();
+    async function loadUssdTypes() {
+      const data = await getUssdTypes();
       if (isMounted) {
-        setOrderTypes(data);
+        setUssdTypes(data);
       }
     }
 
-    loadOrderTypes();
+    loadUssdTypes();
 
     return () => {
       isMounted = false;
     };
   }, []);
 
-  async function refreshOrderTypes() {
-    const data = await getOrderType();
-    setOrderTypes(data);
+  async function refreshUssdTypes() {
+    const data = await getUssdTypes();
+    setUssdTypes(data);
   }
 
   function openAddModal() {
-    setEditingOrderType(null);
-    setOrderTypeName("");
+    setEditingUssdType(null);
+    setUssdTypeName("");
     setModalOpen(true);
   }
 
-  function openEditModal(orderType: OrderType) {
-    setEditingOrderType(orderType);
-    setOrderTypeName(orderType.orderType ?? "");
+  function openEditModal(ussdType: UssdType) {
+    setEditingUssdType(ussdType);
+    setUssdTypeName(ussdType.ussdType ?? "");
     setModalOpen(true);
   }
 
   async function handleSubmit() {
-    if (orderTypeName.trim() === "") return;
+    if (ussdTypeName.trim() === "") return;
 
     try {
-      if (editingOrderType) {
-        await updateOrderType(editingOrderType.orderTypeId, orderTypeName);
-        notifySuccess("Order type updated successfully");
+      if (editingUssdType) {
+        await updateUssdType(editingUssdType.ussdTypeId, ussdTypeName);
+        notifySuccess("USSD type updated successfully");
       } else {
-        await createOrderType(orderTypeName);
-        notifySuccess("Order type created successfully");
+        await createUssdType(ussdTypeName);
+        notifySuccess("USSD type created successfully");
       }
 
       setModalOpen(false);
-      await refreshOrderTypes();
+      await refreshUssdTypes();
     } catch (error) {
       notifyError(error instanceof Error ? error.message : "Something went wrong");
     }
@@ -83,9 +83,9 @@ export default function OrderTypesPage() {
 
   async function handleDelete(id: number) {
     try {
-      await deleteOrderType(id);
-      notifySuccess("Order type deleted successfully");
-      await refreshOrderTypes();
+      await deleteUssdType(id);
+      notifySuccess("USSD type deleted successfully");
+      await refreshUssdTypes();
     } catch (error) {
       notifyError(error instanceof Error ? error.message : "Something went wrong");
     }
@@ -95,10 +95,10 @@ export default function OrderTypesPage() {
     <Container size="md" py={60}>
       <Group justify="space-between" mb="xl">
         <Title order={2} fw={700}>
-          Order Types
+          USSD Types
         </Title>
         <Button leftSection={<IconPlus size={16} />} onClick={openAddModal}>
-          Add Order Type
+          Add USSD Type
         </Button>
       </Group>
 
@@ -107,32 +107,32 @@ export default function OrderTypesPage() {
           <Table.Thead>
             <Table.Tr>
               <Table.Th w={60}>#</Table.Th>
-              <Table.Th>Order Type</Table.Th>
+              <Table.Th>USSD Type</Table.Th>
               <Table.Th w={120} ta="right">
                 Actions
               </Table.Th>
             </Table.Tr>
           </Table.Thead>
           <Table.Tbody>
-            {orderTypes.map((orderType, index) => (
-              <Table.Tr key={orderType.orderTypeId}>
+            {ussdTypes.map((ussdType, index) => (
+              <Table.Tr key={ussdType.ussdTypeId}>
                 <Table.Td c="dimmed">{index + 1}</Table.Td>
-                <Table.Td>{orderType.orderType}</Table.Td>
+                <Table.Td>{ussdType.ussdType}</Table.Td>
                 <Table.Td>
                   <Group gap="xs" justify="flex-end">
                     <ActionIcon
                       variant="light"
                       color="blue"
-                      onClick={() => openEditModal(orderType)}
-                      aria-label="Edit order type"
+                      onClick={() => openEditModal(ussdType)}
+                      aria-label="Edit USSD type"
                     >
                       <IconPencil size={16} />
                     </ActionIcon>
                     <ActionIcon
                       variant="light"
                       color="red"
-                      onClick={() => handleDelete(orderType.orderTypeId)}
-                      aria-label="Delete order type"
+                      onClick={() => handleDelete(ussdType.ussdTypeId)}
+                      aria-label="Delete USSD type"
                     >
                       <IconTrash size={16} />
                     </ActionIcon>
@@ -143,9 +143,9 @@ export default function OrderTypesPage() {
           </Table.Tbody>
         </Table>
 
-        {orderTypes.length === 0 && (
+        {ussdTypes.length === 0 && (
           <Container py="xl" ta="center" c="dimmed">
-            No order types yet. Click &quot;Add Order Type&quot; to create one.
+            No USSD types yet. Click &quot;Add USSD Type&quot; to create one.
           </Container>
         )}
       </Paper>
@@ -153,19 +153,19 @@ export default function OrderTypesPage() {
       <Modal
         opened={modalOpen}
         onClose={() => setModalOpen(false)}
-        title={editingOrderType ? "Edit Order Type" : "Add Order Type"}
+        title={editingUssdType ? "Edit USSD Type" : "Add USSD Type"}
         centered
       >
         <TextInput
-          label="Order type"
-          placeholder="Enter order type"
-          value={orderTypeName}
-          onChange={(event) => setOrderTypeName(event.currentTarget.value)}
+          label="USSD type"
+          placeholder="Enter USSD type"
+          value={ussdTypeName}
+          onChange={(event) => setUssdTypeName(event.currentTarget.value)}
           mb="md"
           data-autofocus
         />
         <Button onClick={handleSubmit} fullWidth>
-          {editingOrderType ? "Save Changes" : "Add Order Type"}
+          {editingUssdType ? "Save Changes" : "Add USSD Type"}
         </Button>
       </Modal>
     </Container>

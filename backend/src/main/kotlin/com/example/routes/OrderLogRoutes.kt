@@ -8,23 +8,22 @@ import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.jdbc.deleteWhere
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.jdbc.update
-import org.jetbrains.exposed.v1.core.*
 import java.math.BigDecimal
 import java.time.LocalDate
 
 fun Route.orderLogRoutes() {
 
-    post("/orders") {
+    post("/order-logs") {
         val form = call.receive<OrderLogForm>()
         transaction {
             OrderLog.insert {
                 it[stationId] = form.stationId
-                it[orderTypeId] = form.orderTypeId
                 it[amount] = BigDecimal(form.amount)
                 it[duration] = form.duration
                 it[startDate] = LocalDate.parse(form.startDate)
@@ -35,13 +34,12 @@ fun Route.orderLogRoutes() {
         call.respond(HttpStatusCode.Created, "Order log created")
     }
 
-    get("/orders") {
+    get("/order-logs") {
         val orders = transaction {
             OrderLog.selectAll().orderBy(OrderLog.orderId to SortOrder.ASC).map {
                 OrderLogResponse(
                     orderId = it[OrderLog.orderId],
                     stationId = it[OrderLog.stationId],
-                    orderTypeId = it[OrderLog.orderTypeId],
                     amount = it[OrderLog.amount]?.toString(),
                     duration = it[OrderLog.duration],
                     startDate = it[OrderLog.startDate]?.toString(),
@@ -53,7 +51,7 @@ fun Route.orderLogRoutes() {
         call.respond(orders)
     }
 
-    get("/orders/{id}") {
+    get("/order-logs/{id}") {
         val id = call.parameters["id"]?.toIntOrNull()
         if (id == null) {
             call.respond(HttpStatusCode.BadRequest, "Invalid id")
@@ -65,7 +63,6 @@ fun Route.orderLogRoutes() {
                 OrderLogResponse(
                     orderId = it[OrderLog.orderId],
                     stationId = it[OrderLog.stationId],
-                    orderTypeId = it[OrderLog.orderTypeId],
                     amount = it[OrderLog.amount]?.toString(),
                     duration = it[OrderLog.duration],
                     startDate = it[OrderLog.startDate]?.toString(),
@@ -82,7 +79,7 @@ fun Route.orderLogRoutes() {
         }
     }
 
-    put("/orders/{id}") {
+    put("/order-logs/{id}") {
         val id = call.parameters["id"]?.toIntOrNull()
         if (id == null) {
             call.respond(HttpStatusCode.BadRequest, "Invalid id")
@@ -94,7 +91,6 @@ fun Route.orderLogRoutes() {
         val updatedRows = transaction {
             OrderLog.update({ OrderLog.orderId eq id }) {
                 it[stationId] = form.stationId
-                it[orderTypeId] = form.orderTypeId
                 it[amount] = BigDecimal(form.amount)
                 it[duration] = form.duration
                 it[startDate] = LocalDate.parse(form.startDate)
@@ -110,7 +106,7 @@ fun Route.orderLogRoutes() {
         }
     }
 
-    delete("/orders/{id}") {
+    delete("/order-logs/{id}") {
         val id = call.parameters["id"]?.toIntOrNull()
         if (id == null) {
             call.respond(HttpStatusCode.BadRequest, "Invalid id")

@@ -21,17 +21,14 @@ import {
   updateOrderLog,
   deleteOrderLog,
   getStations,
-  getOrderType,
   OrderLog,
   OrderLogForm,
   Station,
-  OrderType,
 } from "@/lib/api";
 import { notifySuccess, notifyError } from "@/lib/notify";
 
 const emptyForm: OrderLogForm = {
   stationId: 0,
-  orderTypeId: 0,
   amount: "",
   duration: 0,
   startDate: "",
@@ -42,7 +39,6 @@ const emptyForm: OrderLogForm = {
 export default function OrderLogPage() {
   const [orders, setOrders] = useState<OrderLog[]>([]);
   const [stations, setStations] = useState<Station[]>([]);
-  const [orderTypes, setOrderTypes] = useState<OrderType[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingOrder, setEditingOrder] = useState<OrderLog | null>(null);
   const [form, setForm] = useState<OrderLogForm>(emptyForm);
@@ -57,15 +53,10 @@ export default function OrderLogPage() {
     let isMounted = true;
 
     async function loadData() {
-      const [orderData, stationData, orderTypeData] = await Promise.all([
-        getOrderLogs(),
-        getStations(),
-        getOrderType(),
-      ]);
+      const [orderData, stationData] = await Promise.all([getOrderLogs(), getStations()]);
       if (isMounted) {
         setOrders(orderData);
         setStations(stationData);
-        setOrderTypes(orderTypeData);
       }
     }
 
@@ -91,7 +82,6 @@ export default function OrderLogPage() {
     setEditingOrder(order);
     setForm({
       stationId: order.stationId ?? 0,
-      orderTypeId: order.orderTypeId ?? 0,
       amount: order.amount ?? "",
       duration: order.duration ?? 0,
       startDate: order.startDate ?? "",
@@ -135,19 +125,9 @@ export default function OrderLogPage() {
     return stations.find((s) => s.stationId === id)?.stationName ?? "—";
   }
 
-  function getOrderTypeName(id: number | null): string {
-    if (id === null) return "—";
-    return orderTypes.find((t) => t.orderTypeId === id)?.orderType ?? "—";
-  }
-
   const stationOptions = stations.map((s) => ({
     value: String(s.stationId),
     label: s.stationName ?? `Station ${s.stationId}`,
-  }));
-
-  const orderTypeOptions = orderTypes.map((t) => ({
-    value: String(t.orderTypeId),
-    label: t.orderType ?? `Type ${t.orderTypeId}`,
   }));
 
   return (
@@ -167,7 +147,6 @@ export default function OrderLogPage() {
             <Table.Tr>
               <Table.Th w={60}>#</Table.Th>
               <Table.Th>Station</Table.Th>
-              <Table.Th>Order Type</Table.Th>
               <Table.Th>Amount</Table.Th>
               <Table.Th>Duration</Table.Th>
               <Table.Th>Start Date</Table.Th>
@@ -183,7 +162,6 @@ export default function OrderLogPage() {
               <Table.Tr key={order.orderId}>
                 <Table.Td c="dimmed">{index + 1}</Table.Td>
                 <Table.Td>{getStationName(order.stationId)}</Table.Td>
-                <Table.Td>{getOrderTypeName(order.orderTypeId)}</Table.Td>
                 <Table.Td>{order.amount}</Table.Td>
                 <Table.Td>{order.duration}</Table.Td>
                 <Table.Td>{order.startDate}</Table.Td>
@@ -234,14 +212,6 @@ export default function OrderLogPage() {
           data={stationOptions}
           value={form.stationId ? String(form.stationId) : null}
           onChange={(value) => setForm({ ...form, stationId: value ? Number(value) : 0 })}
-          mb="md"
-        />
-        <Select
-          label="Order Type"
-          placeholder="Select an order type"
-          data={orderTypeOptions}
-          value={form.orderTypeId ? String(form.orderTypeId) : null}
-          onChange={(value) => setForm({ ...form, orderTypeId: value ? Number(value) : 0 })}
           mb="md"
         />
         <NumberInput

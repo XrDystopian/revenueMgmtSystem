@@ -10,10 +10,10 @@ object Stations : Table("stations") {
     override val primaryKey = PrimaryKey(stationId)
 }
 
-object OrderType : Table("order_type") {
-    val orderTypeId = integer("order_type_id").autoIncrement()
-    val orderType = varchar("order_type", 50).nullable()
-    override val primaryKey = PrimaryKey(orderTypeId)
+object UssdType : Table("ussd_type") {
+    val ussdTypeId = integer("ussd_type_id").autoIncrement()
+    val ussdType = varchar("ussd_type", 50).nullable()
+    override val primaryKey = PrimaryKey(ussdTypeId)
 }
 
 object Presenters : Table("presenters") {
@@ -26,13 +26,13 @@ object Presenters : Table("presenters") {
 object Ussd : Table("ussd") {
     val ussdId = integer("ussd_id").autoIncrement()
     val ussdCode = varchar("ussd_code", 50).nullable()
+    val ussdTypeId = integer("ussd_type_id").references(UssdType.ussdTypeId).nullable()
     override val primaryKey = PrimaryKey(ussdId)
 }
 
 object OrderLog : Table("order_log") {
     val orderId = integer("order_id").autoIncrement()
     val stationId = integer("station_id").references(Stations.stationId).nullable()
-    val orderTypeId = integer("order_type_id").references(OrderType.orderTypeId).nullable()
     val amount = decimal("amount", 10, 2).nullable()
     val duration = integer("duration").nullable()
     val startDate = date("start_date").nullable()
