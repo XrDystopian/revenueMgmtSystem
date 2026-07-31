@@ -71,8 +71,14 @@ export default function UssdPage() {
   }
 
   async function handleSubmit() {
-    if (ussdCode.trim() === "") return;
-
+  if (ussdCode.trim() === "") {
+      notifyError("USSD code is required");
+      return;
+    }
+    if (!ussdTypeId) {
+      notifyError("USSD type is required");
+      return;
+    }
     const parsedUssdTypeId = ussdTypeId ? Number(ussdTypeId) : null;
 
     try {

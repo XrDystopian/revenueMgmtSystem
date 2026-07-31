@@ -92,8 +92,33 @@ export default function OrderLogPage() {
   }
 
   async function handleSubmit() {
+    if (!form.stationId) {
+      notifyError("Station is required");
+      return;
+    }
+    if (!form.amount || Number(form.amount) <= 0) {
+      notifyError("Amount must be greater than 0");
+      return;
+    }
+    if (!form.duration || form.duration <= 0) {
+      notifyError("Duration must be greater than 0");
+      return;
+    }
+    if (!form.startDate) {
+      notifyError("Start date is required");
+      return;
+    }
+    if (!form.endDate) {
+      notifyError("End date is required");
+      return;
+    }
+    if (form.endDate < form.startDate) {
+      notifyError("End date cannot be before start date");
+      return;
+    }
+  
     const submission: OrderLogForm = { ...form, dailyOrderAmount };
-
+  
     try {
       if (editingOrder) {
         await updateOrderLog(editingOrder.orderId, submission);
@@ -102,7 +127,7 @@ export default function OrderLogPage() {
         await createOrderLog(submission);
         notifySuccess("Order created successfully");
       }
-
+  
       setModalOpen(false);
       await refreshOrders();
     } catch (error) {

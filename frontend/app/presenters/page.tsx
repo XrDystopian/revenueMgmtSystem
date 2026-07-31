@@ -74,7 +74,14 @@ export default function PresentersPage() {
   }
 
   async function handleSubmit() {
-    if (presenterName.trim() === "") return;
+  if (presenterName.trim() === "") {
+      notifyError("Presenter name is required");
+      return;
+    }
+    if (!stationId) {
+      notifyError("Station is required");
+      return;
+    }
 
     const parsedStationId = stationId ? Number(stationId) : null;
 
@@ -196,7 +203,6 @@ export default function PresentersPage() {
           data={stationOptions}
           value={stationId}
           onChange={setStationId}
-          clearable
           mb="md"
         />
         <Button onClick={handleSubmit} fullWidth>

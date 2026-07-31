@@ -22,10 +22,15 @@ import {
   deleteDailyLog,
   getUssd,
   getPresenters,
+  getPresenterExpenses,
+  createPresenterExpense,
+  updatePresenterExpense,
+  deletePresenterExpense,
   DailyLog,
   DailyLogForm,
   Ussd,
   Presenter,
+  PresenterExpense,
 } from "@/lib/api";
 import { notifySuccess, notifyError } from "@/lib/notify";
 
@@ -43,23 +48,30 @@ export default function DailyLogsPage() {
   const [logs, setLogs] = useState<DailyLog[]>([]);
   const [ussdCodes, setUssdCodes] = useState<Ussd[]>([]);
   const [presenters, setPresenters] = useState<Presenter[]>([]);
+  const [expenses, setExpenses] = useState<PresenterExpense[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingLog, setEditingLog] = useState<DailyLog | null>(null);
   const [form, setForm] = useState<DailyLogForm>(emptyForm);
+  const [expenseAmount, setExpenseAmount] = useState("");
+
+  const [originalPresenterId, setOriginalPresenterId] = useState<number | null>(null);
+  const [originalDate, setOriginalDate] = useState<string | null>(null);
 
   useEffect(() => {
     let isMounted = true;
 
     async function loadData() {
-      const [logData, ussdData, presenterData] = await Promise.all([
+      const [logData, ussdData, presenterData, expenseData] = await Promise.all([
         getDailyLogs(),
         getUssd(),
         getPresenters(),
+        getPresenterExpenses(),
       ]);
       if (isMounted) {
         setLogs(logData);
         setUssdCodes(ussdData);
         setPresenters(presenterData);
+        setExpenses(expenseData);
       }
     }
 
@@ -70,14 +82,28 @@ export default function DailyLogsPage() {
     };
   }, []);
 
-  async function refreshLogs() {
-    const data = await getDailyLogs();
-    setLogs(data);
+  async function refreshAll() {
+    const [logData, expenseData] = await Promise.all([getDailyLogs(), getPresenterExpenses()]);
+    setLogs(logData);
+    setExpenses(expenseData);
+  }
+
+  function findExpense(presenterId: number | null, date: string | null) {
+    if (presenterId === null || !date) return undefined;
+    return expenses.find((e) => e.presenterId === presenterId && e.paymentDate === date);
+  }
+
+  function getExpenseAmountDisplay(presenterId: number | null, date: string | null): string {
+    const match = findExpense(presenterId, date);
+    return match?.amount ?? "—";
   }
 
   function openAddModal() {
     setEditingLog(null);
     setForm(emptyForm);
+    setExpenseAmount("");
+    setOriginalPresenterId(null);
+    setOriginalDate(null);
     setModalOpen(true);
   }
 
@@ -92,37 +118,117 @@ export default function DailyLogsPage() {
       startTime: log.startTime ? log.startTime.slice(0, 5) : "",
       endTime: log.endTime ? log.endTime.slice(0, 5) : "",
     });
+
+    const existingExpense = findExpense(log.presenterId, log.date);
+    setExpenseAmount(existingExpense?.amount ?? "");
+    setOriginalPresenterId(log.presenterId);
+    setOriginalDate(log.date);
+
     setModalOpen(true);
   }
 
+  async function syncPresenterExpense(presenterId: number | null, date: string, amount: string) {
+    const presenterOrDateChanged =
+      originalPresenterId !== null &&
+      originalDate !== null &&
+      (originalPresenterId !== presenterId || originalDate !== date);
+
+    if (presenterOrDateChanged) {
+      const oldExpense = findExpense(originalPresenterId, originalDate);
+      if (oldExpense) {
+        await deletePresenterExpense(oldExpense.expenseId);
+      }
+    }
+
+    if (presenterId === null || amount.trim() === "") {
+      return;
+    }
+
+    const latestExpenses = await getPresenterExpenses();
+    const existing = latestExpenses.find(
+      (e) => e.presenterId === presenterId && e.paymentDate === date
+    );
+
+    const expenseForm = { presenterId, amount, paymentDate: date };
+
+    if (existing) {
+      await updatePresenterExpense(existing.expenseId, expenseForm);
+    } else {
+      await createPresenterExpense(expenseForm);
+    }
+  }
+
   async function handleSubmit() {
+    if (!form.ussdId) {
+      notifyError("USSD code is required");
+      return;
+    }
+    if (!form.presenterId) {
+      notifyError("Presenter is required");
+      return;
+    }
+    if (!form.earnings || Number(form.earnings) < 0) {
+      notifyError("Earnings is required");
+      return;
+    }
+    if (!form.winnerPayment || Number(form.winnerPayment) < 0) {
+      notifyError("Winner payment is required");
+      return;
+    }
+    if (!expenseAmount || Number(expenseAmount) <= 0) {
+      notifyError("Presenter expense is required");
+      return;
+    }
+    if (!form.date) {
+      notifyError("Date is required");
+      return;
+    }
+    if (!form.startTime) {
+      notifyError("Start time is required");
+      return;
+    }
+    if (!form.endTime) {
+      notifyError("End time is required");
+      return;
+    }
+    if (form.endTime <= form.startTime) {
+      notifyError("End time must be after start time");
+      return;
+    }
+  
     const submission: DailyLogForm = {
       ...form,
-      startTime: form.startTime ? `${form.startTime}:00` : "",
-      endTime: form.endTime ? `${form.endTime}:00` : "",
+      startTime: `${form.startTime}:00`,
+      endTime: `${form.endTime}:00`,
     };
-
+  
     try {
       if (editingLog) {
         await updateDailyLog(editingLog.logId, submission);
-        notifySuccess("Daily log updated successfully");
       } else {
         await createDailyLog(submission);
-        notifySuccess("Daily log created successfully");
       }
-
+  
+      await syncPresenterExpense(form.presenterId, form.date, expenseAmount);
+  
+      notifySuccess(editingLog ? "Daily log updated successfully" : "Daily log created successfully");
       setModalOpen(false);
-      await refreshLogs();
+      await refreshAll();
     } catch (error) {
       notifyError(error instanceof Error ? error.message : "Something went wrong");
     }
   }
 
-  async function handleDelete(id: number) {
+  async function handleDelete(log: DailyLog) {
     try {
-      await deleteDailyLog(id);
+      const match = findExpense(log.presenterId, log.date);
+      if (match) {
+        await deletePresenterExpense(match.expenseId);
+      }
+
+      await deleteDailyLog(log.logId);
       notifySuccess("Daily log deleted successfully");
-      await refreshLogs();
+      await refreshAll();
     } catch (error) {
       notifyError(error instanceof Error ? error.message : "Something went wrong");
     }
@@ -149,7 +255,7 @@ export default function DailyLogsPage() {
   }));
 
   return (
-    <Container size="lg" py={60}>
+    <Container size="xl" py={60}>
       <Group justify="space-between" mb="xl">
         <Title order={2} fw={700}>
           Daily Logs
@@ -168,6 +274,7 @@ export default function DailyLogsPage() {
               <Table.Th>Presenter</Table.Th>
               <Table.Th>Earnings</Table.Th>
               <Table.Th>Winner Payment</Table.Th>
+              <Table.Th>Presenter Expense</Table.Th>
               <Table.Th>Date</Table.Th>
               <Table.Th>Start</Table.Th>
               <Table.Th>End</Table.Th>
@@ -184,6 +291,7 @@ export default function DailyLogsPage() {
                 <Table.Td>{getPresenterName(log.presenterId)}</Table.Td>
                 <Table.Td>{log.earnings}</Table.Td>
                 <Table.Td>{log.winnerPayment}</Table.Td>
+                <Table.Td>{getExpenseAmountDisplay(log.presenterId, log.date)}</Table.Td>
                 <Table.Td>{log.date}</Table.Td>
                 <Table.Td>{log.startTime}</Table.Td>
                 <Table.Td>{log.endTime}</Table.Td>
@@ -200,7 +308,7 @@ export default function DailyLogsPage() {
                     <ActionIcon
                       variant="light"
                       color="red"
-                      onClick={() => handleDelete(log.logId)}
+                      onClick={() => handleDelete(log)}
                       aria-label="Delete daily log"
                     >
                       <IconTrash size={16} />
@@ -232,7 +340,6 @@ export default function DailyLogsPage() {
           data={ussdOptions}
           value={form.ussdId ? String(form.ussdId) : null}
           onChange={(value) => setForm({ ...form, ussdId: value ? Number(value) : null })}
-          clearable
           mb="md"
         />
         <Select
@@ -243,7 +350,6 @@ export default function DailyLogsPage() {
           onChange={(value) =>
             setForm({ ...form, presenterId: value ? Number(value) : null })
           }
-          clearable
           mb="md"
         />
         <NumberInput
@@ -269,6 +375,19 @@ export default function DailyLogsPage() {
           fixedDecimalScale
           min={0}
           mb="md"
+        />
+        <NumberInput
+          label="Presenter Expense"
+          placeholder="e.g. 2000"
+          value={expenseAmount ? Number(expenseAmount) : ""}
+          onChange={(value) => setExpenseAmount(value ? String(value) : "")}
+          thousandSeparator=","
+          decimalScale={2}
+          fixedDecimalScale
+          min={0}
+          mb="md"
+          disabled={!form.presenterId}
+          description={!form.presenterId ? "Select a presenter first" : undefined}
         />
         <DateInput
           label="Date"
