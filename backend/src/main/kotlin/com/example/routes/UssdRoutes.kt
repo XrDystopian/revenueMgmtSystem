@@ -14,6 +14,7 @@ import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.jdbc.update
+import com.example.db.DailyLog
 
 fun Route.ussdRoutes() {
 
@@ -94,11 +95,23 @@ fun Route.ussdRoutes() {
             call.respond(HttpStatusCode.BadRequest, "Invalid id")
             return@delete
         }
-
+    
+        val logCount = transaction {
+            DailyLog.selectAll().where { DailyLog.ussdId eq id }.count()
+        }
+    
+        if (logCount > 0) {
+            call.respond(
+                HttpStatusCode.Conflict,
+                "Cannot delete this USSD code: it is linked to $logCount daily log(s). Reassign or remove those first."
+            )
+            return@delete
+        }
+    
         val deletedRows = transaction {
             Ussd.deleteWhere { Ussd.ussdId eq id }
         }
-
+    
         if (deletedRows == 0) {
             call.respond(HttpStatusCode.NotFound, "USSD code not found")
         } else {

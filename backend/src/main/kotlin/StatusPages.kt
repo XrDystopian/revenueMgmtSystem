@@ -1,5 +1,4 @@
 package com.example
-
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.plugins.statuspages.*
@@ -23,14 +22,14 @@ fun Application.configureStatusPages() {
         }
         exception<ExposedSQLException> { call, cause ->
             call.respond(
-                HttpStatusCode.BadRequest,
-                "Database error — ensure that referenced IDs exist: ${cause.message}"
+                HttpStatusCode.Conflict,
+                "This action couldn't be completed because related data still exists elsewhere in the system."
             )
         }
         exception<Throwable> { call, cause ->
             call.respond(
                 HttpStatusCode.InternalServerError,
-                "Unexpected server error: ${cause.message}"
+                "Unexpected server error. Please try again or contact support."
             )
         }
     }

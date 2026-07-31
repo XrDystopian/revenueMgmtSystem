@@ -14,6 +14,8 @@ import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.jdbc.update
+import com.example.db.PresenterExpense 
+import com.example.db.DailyLog
 
 fun Route.presenterRoutes() {
 
@@ -94,11 +96,26 @@ fun Route.presenterRoutes() {
             call.respond(HttpStatusCode.BadRequest, "Invalid id")
             return@delete
         }
-
+    
+        val expenseCount = transaction {
+            PresenterExpense.selectAll().where { PresenterExpense.presenterId eq id }.count()
+        }
+        val logCount = transaction {
+            DailyLog.selectAll().where { DailyLog.presenterId eq id }.count()
+        }
+    
+        if (expenseCount > 0 || logCount > 0) {
+            call.respond(
+                HttpStatusCode.Conflict,
+                "Cannot delete this presenter: it is linked to $expenseCount expense(s) and $logCount daily log(s). Reassign or remove those first."
+            )
+            return@delete
+        }
+    
         val deletedRows = transaction {
             Presenters.deleteWhere { Presenters.presenterId eq id }
         }
-
+    
         if (deletedRows == 0) {
             call.respond(HttpStatusCode.NotFound, "Presenter not found")
         } else {

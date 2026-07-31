@@ -14,6 +14,8 @@ import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.jdbc.update
+import com.example.db.Presenters 
+import com.example.db.OrderLog
 
 fun Route.stationRoutes() {
 
@@ -90,11 +92,26 @@ fun Route.stationRoutes() {
             call.respond(HttpStatusCode.BadRequest, "Invalid id")
             return@delete
         }
-
+    
+        val presenterCount = transaction {
+            Presenters.selectAll().where { Presenters.stationId eq id }.count()
+        }
+        val orderCount = transaction {
+            OrderLog.selectAll().where { OrderLog.stationId eq id }.count()
+        }
+    
+        if (presenterCount > 0 || orderCount > 0) {
+            call.respond(
+                HttpStatusCode.Conflict,
+                "Cannot delete this station: it is linked to $presenterCount presenter(s) and $orderCount order(s). Reassign or remove those first."
+            )
+            return@delete
+        }
+    
         val deletedRows = transaction {
             Stations.deleteWhere { Stations.stationId eq id }
         }
-
+    
         if (deletedRows == 0) {
             call.respond(HttpStatusCode.NotFound, "Station not found")
         } else {

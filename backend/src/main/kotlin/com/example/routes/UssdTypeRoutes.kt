@@ -14,6 +14,7 @@ import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.jdbc.update
+import com.example.db.Ussd
 
 fun Route.ussdTypeRoutes() {
 
@@ -90,11 +91,23 @@ fun Route.ussdTypeRoutes() {
             call.respond(HttpStatusCode.BadRequest, "Invalid id")
             return@delete
         }
-
+    
+        val ussdCount = transaction {
+            Ussd.selectAll().where { Ussd.ussdTypeId eq id }.count()
+        }
+    
+        if (ussdCount > 0) {
+            call.respond(
+                HttpStatusCode.Conflict,
+                "Cannot delete this USSD type: it is linked to $ussdCount USSD code(s). Reassign or remove those first."
+            )
+            return@delete
+        }
+    
         val deletedRows = transaction {
             UssdType.deleteWhere { UssdType.ussdTypeId eq id }
         }
-
+    
         if (deletedRows == 0) {
             call.respond(HttpStatusCode.NotFound, "USSD type not found")
         } else {
